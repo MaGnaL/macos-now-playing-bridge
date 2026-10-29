@@ -105,9 +105,8 @@ class MediaRemoteWatcher:
 
     def _stream_once(self) -> None:
         cmd = ["/usr/bin/perl", PERL_SCRIPT, FRAMEWORK_PATH, "stream", "--debounce=100"]
-        self._process = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, bufsize=1
-        )
+        # stderr is inherited so adapter errors show up in our terminal/log.
+        self._process = subprocess.Popen(cmd, stdout=subprocess.PIPE, text=True, bufsize=1)
         assert self._process.stdout is not None
         for line in self._process.stdout:
             line = line.strip()
@@ -118,7 +117,9 @@ class MediaRemoteWatcher:
             except json.JSONDecodeError:
                 continue
             self._apply(message)
-        self._process.wait()
+        returncode = self._process.wait()
+        if not self._stop_requested:
+            print(f"[watcher] adapter exited with code {returncode}, restarting", file=sys.stderr)
 
     def _apply(self, message: dict) -> None:
         payload = message.get("payload") or {}
