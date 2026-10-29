@@ -214,6 +214,14 @@ watcher = MediaRemoteWatcher()
 
 
 class Handler(BaseHTTPRequestHandler):
+    def handle(self) -> None:
+        # Clients (browser tabs, OBS widgets) routinely abort mid-response,
+        # e.g. on reload or poll timeout. That is not an error worth a traceback.
+        try:
+            super().handle()
+        except (ConnectionResetError, BrokenPipeError):
+            pass
+
     def _send_json(self, obj: dict, status: int = 200) -> None:
         body = json.dumps(obj).encode("utf-8")
         self.send_response(status)
@@ -244,13 +252,14 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         path = self.path.split("?", 1)[0]
         if path == "/now-playing":
+            # Only payload construction is guarded: a failed *send* is a
+            # client disconnect (see handle()), not a server error.
             try:
-                self._send_json(build_payload(watcher.snapshot()))
+                payload, status = build_payload(watcher.snapshot()), 200
             except Exception as exc:
-                self._send_json(
-                    {"app_version": APP_VERSION, "current_session_id": None, "sessions": [], "error": str(exc)},
-                    status=500,
-                )
+                payload = {"app_version": APP_VERSION, "current_session_id": None, "sessions": [], "error": str(exc)}
+                status = 500
+            self._send_json(payload, status)
         elif path == "/health":
             self._send_json({"ok": True, "app_version": APP_VERSION})
         else:
