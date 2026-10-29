@@ -15,10 +15,10 @@ widget built against that schema.
 ## Quick start
 
 ```bash
-python3 now_playing_bridge.py
+./start
 ```
 
-That's it. It starts serving on `http://127.0.0.1:5000` and keeps running
+(Same as `python3 now_playing_bridge.py`.) That's it. It starts serving on `http://127.0.0.1:5000` and keeps running
 until you stop it with `Ctrl+C`. Play something in any app and check:
 
 ```bash
@@ -31,8 +31,11 @@ You should get back JSON with the current title, artist, artwork, etc. If
 Need a different host/port?
 
 ```bash
-python3 now_playing_bridge.py --host 0.0.0.0 --port 5050
+./start --host 0.0.0.0 --port 5050
 ```
+
+To run it from anywhere as plain `start`, symlink it onto your `PATH`, e.g.
+`ln -s "$PWD/start" ~/.local/bin/start`.
 
 ## Using it with a widget (e.g. OBS)
 

@@ -1,0 +1,4 @@
+#!/bin/sh
+# Starts the bridge from anywhere (also via a symlink on your PATH).
+# All arguments are passed through, e.g. ./start --port 5050
+exec python3 "$(dirname "$(readlink -f "$0")")/now_playing_bridge.py" "$@"
